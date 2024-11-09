@@ -1,0 +1,107 @@
+package db
+
+import (
+	"database/sql"
+	"errors"
+	"fmt"
+	"log"
+	"os"
+	"path/filepath"
+
+	"github.com/golang-migrate/migrate/v4"
+	_ "github.com/golang-migrate/migrate/v4/database/sqlite"
+	_ "github.com/golang-migrate/migrate/v4/source/file"
+	_ "github.com/mattn/go-sqlite3"
+)
+
+const (
+	scrapbookDir  = ".scrapbook"
+	dbFileName    = "scrapbook.sqlite"
+	migrationsDir = "db/migrations"
+)
+
+var DB *sql.DB
+
+func GetDbPath() string {
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		return ""
+	}
+
+	return filepath.Join(homeDir, scrapbookDir, dbFileName)
+}
+
+func CreateRootDir() error {
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		return fmt.Errorf("failed to get user home directory: %w", err)
+	}
+
+	scrapbookDirPath := filepath.Join(homeDir, scrapbookDir)
+	if _, err := os.Stat(scrapbookDirPath); os.IsNotExist(err) {
+		if err := os.Mkdir(scrapbookDirPath, 0755); err != nil {
+			return fmt.Errorf("failed to create scrapbook directory: %w", err)
+		}
+	}
+
+	return nil
+}
+
+func InitDB() error {
+	var err error
+
+	dbPath := GetDbPath()
+	if dbPath == "" {
+		return errors.New("failed to get database path")
+	}
+
+	DB, err = sql.Open("sqlite3", dbPath)
+	if err != nil {
+		return fmt.Errorf("failed to connect to database: %w", err)
+	}
+
+	if err := DB.Ping(); err != nil {
+		return fmt.Errorf("failed to verify database connection: %w", err)
+	}
+
+	log.Println("Database connection established.")
+	return nil
+}
+
+func RunMigrations() error {
+	dbPath := "sqlite://" + GetDbPath()
+
+	migrationsDirAbsPath, err := filepath.Abs(migrationsDir)
+	if err != nil {
+		return fmt.Errorf("failed to get absolute path of migrations directory: %w", err)
+	}
+	migrationsPath := "file://" + migrationsDirAbsPath
+
+	migration, err := migrate.New(migrationsPath, dbPath)
+	if err != nil {
+		return fmt.Errorf("failed to create migration instance: %w", err)
+	}
+
+	if err := migration.Up(); err != nil && err != migrate.ErrNoChange {
+		return fmt.Errorf("failed to apply migrations: %w", err)
+	}
+
+	log.Println("Migrations applied.")
+	return nil
+}
+
+func Initialize() error {
+	if err := CreateRootDir(); err != nil {
+		return fmt.Errorf("failed to create root directory: %w", err)
+	}
+
+	if err := InitDB(); err != nil {
+		return fmt.Errorf("failed to initialize database: %w", err)
+	}
+
+	if err := RunMigrations(); err != nil {
+		return fmt.Errorf("failed to run migrations: %w", err)
+	}
+
+	return nil
+}
