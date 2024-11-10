@@ -22,7 +22,7 @@ const (
 
 var db *sql.DB
 
-func GetDbPath() string {
+func getDbPath() string {
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
 		return ""
@@ -31,7 +31,7 @@ func GetDbPath() string {
 	return filepath.Join(homeDir, scrapbookDir, dbFileName)
 }
 
-func CreateRootDir() error {
+func createRootDir() error {
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
 		return fmt.Errorf("failed to get user home directory: %w", err)
@@ -47,10 +47,10 @@ func CreateRootDir() error {
 	return nil
 }
 
-func InitDB() error {
+func initDB() error {
 	var err error
 
-	dbPath := GetDbPath()
+	dbPath := getDbPath()
 	if dbPath == "" {
 		return errors.New("failed to get database path")
 	}
@@ -68,8 +68,8 @@ func InitDB() error {
 	return nil
 }
 
-func RunMigrations() error {
-	dbPath := "sqlite://" + GetDbPath()
+func runMigrations() error {
+	dbPath := "sqlite://" + getDbPath()
 
 	migrationsDirAbsPath, err := filepath.Abs(migrationsDir)
 	if err != nil {
@@ -91,15 +91,15 @@ func RunMigrations() error {
 }
 
 func Initialize() error {
-	if err := CreateRootDir(); err != nil {
+	if err := createRootDir(); err != nil {
 		return fmt.Errorf("failed to create root directory: %w", err)
 	}
 
-	if err := InitDB(); err != nil {
+	if err := initDB(); err != nil {
 		return fmt.Errorf("failed to initialize database: %w", err)
 	}
 
-	if err := RunMigrations(); err != nil {
+	if err := runMigrations(); err != nil {
 		return fmt.Errorf("failed to run migrations: %w", err)
 	}
 
@@ -108,7 +108,7 @@ func Initialize() error {
 
 func GetDB() *sql.DB {
 	if db == nil {
-		err := InitDB()
+		err := initDB()
 		if err != nil {
 			log.Fatalf("failed to initialize database: %v", err)
 		}
