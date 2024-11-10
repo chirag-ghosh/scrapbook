@@ -20,7 +20,7 @@ const (
 	migrationsDir = "db/migrations"
 )
 
-var DB *sql.DB
+var db *sql.DB
 
 func GetDbPath() string {
 	homeDir, err := os.UserHomeDir()
@@ -55,12 +55,12 @@ func InitDB() error {
 		return errors.New("failed to get database path")
 	}
 
-	DB, err = sql.Open("sqlite3", dbPath)
+	db, err = sql.Open("sqlite3", dbPath)
 	if err != nil {
 		return fmt.Errorf("failed to connect to database: %w", err)
 	}
 
-	if err := DB.Ping(); err != nil {
+	if err := db.Ping(); err != nil {
 		return fmt.Errorf("failed to verify database connection: %w", err)
 	}
 
@@ -104,4 +104,15 @@ func Initialize() error {
 	}
 
 	return nil
+}
+
+func GetDB() *sql.DB {
+	if db == nil {
+		err := InitDB()
+		if err != nil {
+			log.Fatalf("failed to initialize database: %v", err)
+		}
+	}
+
+	return db
 }
