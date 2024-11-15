@@ -7,6 +7,7 @@ import (
 )
 
 func StartServer() {
+	http.HandleFunc("/timeline", handleTimeline)
 	http.HandleFunc("/health", handleHealthCheck)
 	http.HandleFunc("/", handleHealthCheck)
 
