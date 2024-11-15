@@ -1,8 +1,10 @@
+import Timeline from "./components/Timeline"
+
 function App() {
 
   return (
     <div className='App'>
-      <h1>Scrapbook</h1>
+      <Timeline />
     </div>
   )
 }

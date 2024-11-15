@@ -5,6 +5,7 @@ go 1.23.2
 require (
 	github.com/golang-migrate/migrate/v4 v4.18.1
 	github.com/mattn/go-sqlite3 v1.14.24
+	github.com/rs/cors v1.11.1
 	github.com/rwcarlsen/goexif v0.0.0-20190401172101-9e8deecbddbd
 	github.com/spf13/cobra v1.8.1
 )

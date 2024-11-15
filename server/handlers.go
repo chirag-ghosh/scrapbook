@@ -32,7 +32,8 @@ func handleTimeline(w http.ResponseWriter, r *http.Request) {
 	offset := (page - 1) * limit
 
 	query := `SELECT id, file_dir, name, camera_make, camera_model, lens_id, width, height, focal_length, aperture, shutter_speed, iso, captured_at 
-			  FROM photos 
+			  FROM photos
+			  WHERE name LIKE '%.jpg' OR name LIKE '%.png' OR name LIKE '%.jpeg'
 			  ORDER BY captured_at DESC 
 			  LIMIT $1 OFFSET $2`
 
@@ -66,4 +67,25 @@ func handleTimeline(w http.ResponseWriter, r *http.Request) {
 	if err := json.NewEncoder(w).Encode(photos); err != nil {
 		http.Error(w, fmt.Sprintf("Error encoding JSON: %v", err), http.StatusInternalServerError)
 	}
+}
+
+func handlePhotoServe(w http.ResponseWriter, r *http.Request) {
+	imageIdParam := r.PathValue("id")
+
+	imageId, err := strconv.Atoi(imageIdParam)
+	if err != nil {
+		http.Error(w, "Invalid image ID", http.StatusBadRequest)
+		return
+	}
+
+	db := db.GetDB()
+
+	var photo models.Photo
+	err = db.QueryRow(`SELECT id, file_dir, name FROM photos WHERE id = $1`, imageId).Scan(&photo.ID, &photo.FileDir, &photo.Name)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Error querying database: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	http.ServeFile(w, r, fmt.Sprintf("%s/%s", photo.FileDir, photo.Name))
 }
