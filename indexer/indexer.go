@@ -165,9 +165,9 @@ func addPhoto(directoryId int, photoPath string) error {
 			photo.ISO, _ = tag.Int(0)
 		}
 
-		tag, err = exifData.Get(exif.DateTime)
+		capturedTimestamp, err := exifData.DateTime()
 		if err == nil {
-			photo.CapturedAt, _ = tag.StringVal()
+			photo.CapturedAt = capturedTimestamp.Format("2006-01-02 15:04:05")
 		}
 	}
 
