@@ -2,6 +2,11 @@ package indexer
 
 import (
 	"fmt"
+	"image"
+	_ "image/gif"
+	_ "image/jpeg"
+	_ "image/png"
+	"io"
 	"log"
 	"mime"
 	"os"
@@ -181,6 +186,22 @@ func addPhoto(directoryId int, photoPath string) error {
 
 		photo.Width = width
 		photo.Height = height
+	} else {
+		fileInfo, err := file.Stat()
+		if err == nil {
+			photo.CapturedAt = fileInfo.ModTime().Format("2006-01-02 15:04:05")
+		}
+
+		if mimeType == "image/jpeg" || mimeType == "image/png" || mimeType == "image/gif" {
+			_, err = file.Seek(0, io.SeekStart)
+			if err == nil {
+				im, _, err := image.DecodeConfig(file)
+				if err == nil {
+					photo.Width = im.Width
+					photo.Height = im.Height
+				}
+			}
+		}
 	}
 
 	db := db.GetDB()
