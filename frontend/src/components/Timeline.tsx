@@ -55,12 +55,13 @@ function Timeline() {
   useEffect(() => {
     const handleResize = () => {
       setPhotosInARow(getPhotosInARow());
+      setAdjustedPhotos(resizePhotos(photos, getPhotosInARow(), window.innerWidth))
     };
     window.addEventListener("resize", handleResize);
     return () => {
       window.removeEventListener("resize", handleResize);
     };
-  }, []);
+  }, [photos]);
 
   const observerTarget = useRef(null);
 
@@ -69,13 +70,14 @@ function Timeline() {
     setLoading(true);
 
     try {
-      const response = await fetch(`${BACKEND_URL}/timeline?page=${page}&limit=${photosInARow * 10}`);
+      const response = await fetch(`${BACKEND_URL}/timeline?page=${page}&limit=${20}`);
       const data = await response.json();
 
       if (data == null || data.length === 0) {
         setHasNextPage(false);
       } else {
         setPhotos((prevPhotos) => [...prevPhotos, ...data]);
+        setAdjustedPhotos((prevPhotos) => [...prevPhotos, ...resizePhotos(data, photosInARow, window.innerWidth)]);
         setPage((prevPage) => prevPage + 1);
       }
     } catch (error) {
@@ -88,7 +90,6 @@ function Timeline() {
   useEffect(() => {
     const observe = new IntersectionObserver(
       (entries) => {
-        console.log(entries);
         entries.forEach((entry) => {
           if (entry.intersectionRatio > 0 && entry.intersectionRatio <= 1) {
             fetchPhotos();
@@ -110,10 +111,6 @@ function Timeline() {
       }
     };
   }, [observerTarget, photos, page, loading, hasNextPage]);
-
-  useEffect(() => {
-    setAdjustedPhotos(resizePhotos([...photos], photosInARow, window.innerWidth))
-  }, [photos, window.innerWidth])
 
   return (
     <div className="timeline">

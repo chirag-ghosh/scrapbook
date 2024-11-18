@@ -87,5 +87,6 @@ func handlePhotoServe(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	w.Header().Set("Cache-Control", "public, max-age=3600")
 	http.ServeFile(w, r, fmt.Sprintf("%s/%s", photo.FileDir, photo.Name))
 }
