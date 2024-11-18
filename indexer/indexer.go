@@ -125,16 +125,6 @@ func addPhoto(directoryId int, photoPath string) error {
 			photo.LensID, _ = tag.StringVal()
 		}
 
-		tag, err = exifData.Get(exif.PixelXDimension)
-		if err == nil {
-			photo.Width, _ = tag.Int(0)
-		}
-
-		tag, err = exifData.Get(exif.PixelYDimension)
-		if err == nil {
-			photo.Height, _ = tag.Int(0)
-		}
-
 		tag, err = exifData.Get(exif.FocalLength)
 		if err == nil {
 			num, den, _ := tag.Rat2(0)
@@ -169,6 +159,28 @@ func addPhoto(directoryId int, photoPath string) error {
 		if err == nil {
 			photo.CapturedAt = capturedTimestamp.Format("2006-01-02 15:04:05")
 		}
+
+		var width, height int
+		tag, err = exifData.Get(exif.PixelXDimension)
+		if err == nil {
+			width, _ = tag.Int(0)
+		}
+
+		tag, err = exifData.Get(exif.PixelYDimension)
+		if err == nil {
+			height, _ = tag.Int(0)
+		}
+
+		tag, err = exifData.Get(exif.Orientation)
+		if err == nil {
+			orientation, _ := tag.Int(0)
+			if orientation >= 5 {
+				width, height = height, width
+			}
+		}
+
+		photo.Width = width
+		photo.Height = height
 	}
 
 	db := db.GetDB()
