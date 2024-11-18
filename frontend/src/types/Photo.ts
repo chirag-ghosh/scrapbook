@@ -6,7 +6,9 @@ export interface IPhoto {
     camera_model: string
     lens_id: string
     width: number
+    adjusted_width: number
     height: number
+    adjusted_height: number
     focal_length: number
     aperture: number
     shutter_speed: string
